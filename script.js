@@ -1,13 +1,53 @@
 // Music player logic
 const musicPlayer = document.querySelector('.music-player');
 if (musicPlayer) {
-    const audio = new Audio('mp3/سورة المؤمنون.mp3');
+    // Playlist array with multiple songs
+    const playlist = [
+        { src: 'mp3/love nwantiti.mp3', title: 'love nwantiti (ah ah ah)' },
+        { src: 'mp3/ჩუბინა.mp3', title: 'ჩუბინა' },
+        { src: 'mp3/Central Cee x Dave.mp3', title: 'Central Cee x Dave' }
+    ];
+    
+    let currentSongIndex = 0;
+    const audio = new Audio(playlist[currentSongIndex].src);
     const playBtn = musicPlayer.querySelector('.music-btn.play');
     const prevBtn = musicPlayer.querySelector('.music-btn.prev');
     const nextBtn = musicPlayer.querySelector('.music-btn.next');
     const progress = musicPlayer.querySelector('.music-progress');
     const currentTimeEl = musicPlayer.querySelector('.current-time');
     const durationEl = musicPlayer.querySelector('.total-duration');
+    const musicTitle = musicPlayer.querySelector('.music-title');
+
+    // Update the music title display
+    function updateMusicTitle() {
+        if (musicTitle) {
+            musicTitle.textContent = playlist[currentSongIndex].title;
+        }
+    }
+
+    // Load and play a song
+    function loadSong(index) {
+        currentSongIndex = index;
+        audio.src = playlist[currentSongIndex].src;
+        updateMusicTitle();
+        audio.play().then(() => {
+            playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        }).catch(() => {
+            // ignore play errors (e.g. browser restrictions)
+        });
+    }
+
+    // Play next song in playlist
+    function playNextSong() {
+        currentSongIndex = (currentSongIndex + 1) % playlist.length;
+        loadSong(currentSongIndex);
+    }
+
+    // Play previous song in playlist
+    function playPrevSong() {
+        currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+        loadSong(currentSongIndex);
+    }
 
     // Intro overlay logic - first click starts audio and hides overlay
     const introOverlay = document.getElementById('intro-overlay');
@@ -51,6 +91,10 @@ if (musicPlayer) {
         currentTimeEl.textContent = formatTime(audio.currentTime);
     });
 
+    audio.addEventListener('ended', () => {
+        playNextSong(); // Automatically play next song when current one ends
+    });
+
     playBtn.addEventListener('click', () => {
         if (audio.paused) {
             audio.play();
@@ -72,12 +116,16 @@ if (musicPlayer) {
         });
     }
 
-    // Dummy previous/next behavior (same track, small seek)
+    // Previous button functionality (previous song)
     prevBtn.addEventListener('click', () => {
-        audio.currentTime = Math.max(audio.currentTime - 10, 0);
+        playPrevSong();
     });
 
+    // Next button functionality (next song) - changed from seeking to changing songs
     nextBtn.addEventListener('click', () => {
-        audio.currentTime = Math.min(audio.currentTime + 10, audio.duration || audio.currentTime + 10);
+        playNextSong();
     });
+    
+    // Initialize music title
+    updateMusicTitle();
 }
